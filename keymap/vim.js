@@ -22,6 +22,9 @@
 // S, C TODO
 // cf<char>, cF<char>, ct<char>, cT<char>
 //
+// Leaving insert mode:
+// Esc, Ctrl-c, Ctrl-[
+//
 // Deleting text:
 // x, X
 // J
@@ -223,6 +226,12 @@
     popCount();
     cm.setOption("keyMap", "vim-insert");
   }
+
+  function leaveInsertMode(cm) {
+    cm.setCursor(cm.getCursor().line, cm.getCursor().ch-1, true);
+    cm.setOption("keyMap", "vim");
+  }
+
 
   function dialog(cm, text, shortText, f) {
     if (cm.openDialog) cm.openDialog(text, f);
@@ -518,10 +527,9 @@
 
   CodeMirror.keyMap["vim-insert"] = {
     // TODO: override navigation keys so that Esc will cancel automatic indentation from o, O, i_<CR>
-    "Esc": function(cm) {
-      cm.setCursor(cm.getCursor().line, cm.getCursor().ch-1, true);
-      cm.setOption("keyMap", "vim");
-    },
+    "Esc": leaveInsertMode,
+    "Ctrl-C": leaveInsertMode,
+    "Ctrl-[": leaveInsertMode,
     "Ctrl-N": "autocomplete",
     "Ctrl-P": "autocomplete",
     fallthrough: ["default"]
