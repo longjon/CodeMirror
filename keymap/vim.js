@@ -195,7 +195,7 @@
       idx = line.indexOf(ch, cur.ch + 1);
       if (idx != -1 && !mo.inclusive) idx -= 1;
     } else {
-      idx = line.lastIndexOf(ch, cur.ch);
+      idx = line.lastIndexOf(ch, cur.ch - 1);
       if (idx != -1 && !mo.inclusive) idx += 1;
     }
     return idx;
