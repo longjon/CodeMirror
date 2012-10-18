@@ -9,7 +9,7 @@
 // G
 // ge, gE
 // gg
-// f<char>, F<char>, t<char>, T<char>
+// f<char>, F<char>, t<char>, T<char>, ;, ,
 // Ctrl-o, Ctrl-i TODO (FIXME - Ctrl-O wont work in Chrome)
 // /, ?, n, N TODO (does not work)
 // #, * TODO
@@ -57,6 +57,7 @@
   var yank = 0;
   var mark = [];
   var reptTimes = 0;
+  var lastMotion = '';
   function emptyBuffer() { buf = ""; }
   function pushInBuffer(str) { buf += str; }
   function pushCountDigit(digit) { return function(cm) {count += digit;}; }
@@ -200,6 +201,27 @@
     return idx;
   }
 
+  function setLastMotion(ch, m) {
+    lastMotion = {'cmd': ch, 'cHar': m};
+  }
+
+  function repeatLastMotion(cm, reverse_dir) {
+    if (!lastMotion)
+      return;
+
+    var last_cmd;
+    if (reverse_dir) {
+      if (lastMotion.cmd >= 'a')
+        last_cmd = lastMotion.cmd.toUpperCase();
+      else
+        last_cmd = lastMotion.cmd.toLowerCase();
+    } else {
+      last_cmd = lastMotion.cmd;
+    }
+
+    moveTillChar(cm, lastMotion.cHar, MOTION_OPTIONS[last_cmd]);
+  }
+
   function moveTillChar(cm, cHar, motion_options) {
     // Move to cHar in line, as found by charIdxInLine.
     var idx = charIdxInLine(cm, cHar, motion_options), cur = cm.getCursor();
@@ -312,6 +334,12 @@
       count == "" ? cm.setCursor(cm.lineCount()) : cm.setCursor(parseInt(count, 10)-1);
       popCount();
       CodeMirror.commands.goLineStart(cm);
+    },
+    ";": function(cm) {
+      repeatLastMotion(cm, false);
+    },
+    ",": function(cm) {
+      repeatLastMotion(cm, true);
     },
     "':'": function(cm) {
       var exModeDialog = ': <input type="text" style="width: 90%"/>';
@@ -495,12 +523,15 @@
     // all commands, related to motions till char in line
     iterObj(MOTION_OPTIONS, function (ch, options) {
       CodeMirror.keyMap["vim-prefix-" + ch][m] = function(cm) {
+        setLastMotion(ch, m);
         moveTillChar(cm, m, options);
       };
       CodeMirror.keyMap["vim-prefix-d" + ch][m] = function(cm) {
+        setLastMotion(ch, m);
         delTillChar(cm, m, options);
       };
       CodeMirror.keyMap["vim-prefix-c" + ch][m] = function(cm) {
+        setLastMotion(ch, m);
         delTillChar(cm, m, options);
         enterInsertMode(cm);
       };
